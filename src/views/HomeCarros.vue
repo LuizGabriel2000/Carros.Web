@@ -5,23 +5,44 @@
         <v-container>
             <v-card  class="my-10" color="rgba(0, 0, 0, 0.220)">
                 <v-row>
-                    <v-col cols="3">
+                    <v-col cols="2">
                         <h2 class="ma-4" style="color: beige;">Adicionar Carro:</h2>
                     </v-col>
 
-                    <v-col cols="3">
-                        <v-text-field v-model="formData.modelo"></v-text-field>
-                            <p style="color: maroon;">Marca - Modelo (Exemplo: "Fiat Uno")</p>
+                    <v-col cols="2">
+                        <v-text-field v-model="formData.marca"></v-text-field>
+                            <p style="color: maroon;">Marca (Exemplo:"Fiat")</p>
                     </v-col>
 
-                    <v-col cols="3">
-                         <v-text-field v-model="formData.placa"></v-text-field>
-                          <p style="color: maroon;" >Placa (Exemplo: "HSP2367")</p>
+                    <v-col cols="2">
+                         <v-text-field v-model="formData.modelo"></v-text-field>
+                          <p style="color: maroon;" >Modelo (Exemplo:"Uno")</p>
+                    </v-col>
+
+                    <v-col cols="2">
+                        <v-select
+                            v-model="formData.cor"
+                            :items="coresCarros"
+                            item-text="texto"
+                            item-value="cor"
+                            label="Selecione as cores"
+                            :menu-props="{ botton: true, offsetY: true }"
+                        ></v-select>
+                            <p style="color: maroon;">Cor - (Exemplo: "Azul")</p>
+                    </v-col>
+
+
+                    <v-col cols="2">
+                        <v-text-field v-model="formData.placa"></v-text-field>
+                            <p style="color: maroon;">Placa (Exemplo:"BIU2J19")</p>
                     </v-col>
 
                     
-                    <v-col cols="3">
-                         <v-btn class="ml-15 mt-10" color="primary" @click="Adicionar()">Adicionar</v-btn>
+                    
+
+                    
+                    <v-col cols="2">
+                         <v-btn class="ml-7 mt-15" color="primary" @click="Adicionar()">Adicionar</v-btn>
                     </v-col>
                 </v-row>
             </v-card>
@@ -32,6 +53,7 @@
                 <v-row>
                     <v-col cols="3">
                         <h2 style="color: beige;" class="ma-4">Lista dos Carros:</h2>
+                        <p class="ml-2" style="color:aqua">A Api está disponivel no GitHub</p>
                     </v-col>
 
                     <v-col cols="9">
@@ -45,7 +67,7 @@
                             </v-col>
 
                             <v-col cols="2">
-                                <h3 style="color: blue;">Cor</h3>
+                                <h3 style="color: blue;">Cor</h3> 
                             </v-col>
 
                             <v-col cols="2">
@@ -74,7 +96,7 @@
                                         </v-col>
 
                                         <v-col cols="2">
-                                            <h3>{{item.cor}}</h3>
+                                            <v-icon :color="item.cor">fa-solid fa-car</v-icon>
                                         </v-col>
 
 
@@ -148,7 +170,13 @@
                 <v-text-field v-model="formEdit.modelo" label="Modelo"></v-text-field>
             </div>
             <div class="mx-3">
-                <v-text-field v-model="formEdit.cor" label="Cor"></v-text-field>
+                <v-select
+                    v-model="formEdit.cor"
+                    :items="coresCarros"
+                    item-text="texto"
+                    item-value="cor"
+                    :menu-props="{ botton: true, offsetY: true }"
+                ></v-select>
                 <v-text-field v-model="formEdit.placa" label="Placa"></v-text-field>
             </div>
         </v-card-text>
@@ -174,26 +202,45 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
 </div>
  
 </template>
 
 <script>
 import axios from "axios"
+
 import NavBarVue from '@/components/commons/NavBar.vue'
+
 export default {
  components: {
     NavBarVue,
-  },
+},
   data() {
-    return {       
+    return { 
+        ListaCores: [
+            "Preto",
+            "Branco",
+            "Azul",
+            "Amarelo",
+            "Vermelho",
+            "Rosa",
+            "Prata",
+            "Marron",
+            "Verde"
+        ],  
+        coresCarros: [], 
         dialog: false,
+        ModalCor: false,
         benched: 0, 
         lista: [],
         listaCarro: [],
         formData: {
+            codigo: null,
+            marca: null,
             modelo: null,
-            placa:null
+            placa: null,
+            cor: null
         },
         formEdit: {
             codigo: null,
@@ -209,15 +256,19 @@ export default {
 
   mounted () {
     this.BuscarCarros()
+    this.corCarro()
+
   },
 
   methods: {
     Adicionar() {
+
         axios
         .post(`http://localhost:3000/api/carro`, this.formData)
         .then(response => {
             console.log(response)
             this.BuscarCarros()
+            this.formData.marca = null
             this.formData.modelo = null
             this.formData.placa = null
         })
@@ -241,13 +292,15 @@ export default {
     },
 
     EditarCarro(item) {
-        console.log(item)
-        this.formEdit.marca = item.marca
+        console.log('caralhoooooooooooooooooo', item.cor)
+
         this.formEdit.cor = item.cor
+        this.formEdit.marca = item.marca
         this.formEdit.codigo = item.codigo
         this.formEdit.modelo = item.descricao
         this.formEdit.placa = item.placa
         this.dialog = true
+        
 
     },
 
@@ -280,7 +333,17 @@ export default {
             this.listaCarro = this.lista
         }
 
+    },
+
+    corCarro() {
+        axios
+        .get(`http://localhost:3000/api/cor-carro`)
+        .then(response => {
+            console.log('aqui', response)
+            this.coresCarros = response.data.result
+        })
     }
+
   }
 }
 </script>
